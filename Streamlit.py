@@ -54,7 +54,7 @@ def snowflake_api_call(query: str, limit: int = 10):
                   "experimental": {"returnConfidenceScores": True}},
           },    
         #"response_instruction": "You will be asked about Question from Faq file or analytics data. Be precise on this"
-        "response_instruction": "For any query related to orders,sales,refunds revenue we should use Analyst; For all Order realted faq questions we should use Search. Divide the query and accordingly assign respective tools and combine the results from both the tools"
+        "response_instruction": "You have two tools. 'Sales Analyst' for quantitative questions about sales data (e.g., totals, counts, trends). 'Faq Search' for qualitative questions about policies or procedures (e.g., 'how to', 'what is'). If a user asks a question that has both quantitative and qualitative parts, you must use both tools. First, use 'Faq Search' to answer the qualitative part, then use 'Sales Analyst' to answer the quantitative part. Finally, combine both answers into a single, comprehensive response."
         # "instructions": {
         #     "response": "You will respond in a friendly but concise manner",
         #     "orchestration": "For any query related to orders,sales,refunds revenue we should use Analyst; For all Order realted faq questions we should use Search",
