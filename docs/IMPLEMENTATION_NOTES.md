@@ -11,6 +11,10 @@ The Streamlit application was failing to properly combine results from both Cort
 
 3. **No Debugging Visibility**: Users and developers had no way to see which tools were being invoked, making it difficult to diagnose orchestration failures.
 
+4. **Tool Name Extraction Issues**: The SSE response parsing was not correctly extracting tool names from the response structure, leading to "Unknown" tool names being reported.
+
+5. **LLM Not Calling Both Tools**: The biggest issue - Claude is not calling the Sales Analyst tool even when explicitly instructed to do so for data questions. This is a prompt engineering challenge specific to multi-tool orchestration.
+
 ## Solutions Implemented
 
 ### 1. Enhanced Response Instruction (Lines 56-85)
@@ -41,7 +45,77 @@ The Streamlit application was failing to properly combine results from both Cort
 - Users get real-time feedback about what's happening
 - Better tracking of tool results prevents data loss
 
+### 4. Enhanced Tool Name Detection and Debug Tracing
+
+**What Changed:**
+- Fixed tool name extraction to correctly map internal tool types to friendly names
+- Added mapping: `cortex_search` → "Faq Search", `cortex_analyst_text_to_sql` → "Sales Analyst"
+- Added comprehensive debug tracing for SSE events and tool calls
+- Added API response structure debugging
+- Enhanced error detection for tool orchestration failures
+- Added validation warnings when expected tools aren't called
+
+**Why It Works:**
+- Correctly identifies which tools are actually being called
+- Provides clear feedback when only one tool is called instead of both
+- Better visibility into what's happening during tool execution
+- Easier diagnosis of orchestration issues
+
+### 5. Significantly Strengthened Response Instruction
+
+**What Changed:**
+- Added explicit tool type names (cortex_search, cortex_analyst_text_to_sql) in the instruction
+- Used much stronger directive language ("YOU MUST", "NO EXCEPTIONS", "MANDATORY")
+- Added detailed CORRECT vs WRONG action examples
+- Explicitly prohibited saying "I cannot provide" without calling appropriate tools
+- Added step-by-step parsing instructions for compound queries
+- Emphasized that both tools MUST be called for compound questions
+
+**Why It's Needed:**
+- Claude was refusing to call Sales Analyst even with the original instructions
+- The LLM needs extremely explicit directions to perform multi-tool orchestration
+- Examples showing wrong behavior help prevent those exact mistakes
+- Stronger language increases likelihood of compliance
+
+**Current Challenge:**
+- Even with enhanced instructions, LLM behavior can be non-deterministic
+- Claude may still occasionally refuse to call both tools
+- This is a known limitation of LLM-based multi-tool agents
+
+## Debugging Guide for Tool Orchestration Issues
+
+### If you see "Unknown" tool names:
+
+1. **Enable Debug Mode**: Check the debug mode checkbox in the sidebar
+2. **Look for Debug Output**: You should see:
+   - "Debug - Event type: tool_use" messages showing the actual tool call structure
+   - "Debug - API Response structure" showing the full API response
+3. **Check Tool Names**: Verify that the tool names in the debug output match "Sales Analyst" and "Faq Search"
+
+### If only one tool is called when both are expected:
+
+1. **Check the Response Instruction**: Ensure the compound query clearly requires both policy AND data information
+2. **Try Rephrasing**: Use more explicit language like "What is the refund policy AND how many orders were placed?"
+3. **Monitor Debug Output**: Look for which tools are actually being called
+
+### If no tools are called:
+
+1. **Check API Response**: Look for error messages in the debug output
+2. **Verify Tool Configuration**: Ensure SEMANTIC_MODEL and CORTEX_SEARCH_DOCUMENTATION are correctly set
+3. **Check Prompt**: Make sure the query clearly requires tool usage
+
 ### 3. Debug Mode Toggle (Lines 193-207)
+
+**What Changed:**
+- Added sidebar with debug mode checkbox (enabled by default)
+- Added visual tool reference in sidebar
+- Stored debug_mode in session state
+- Made all debug messages conditional on the flag
+
+**Why It Works:**
+- Users can toggle verbose logging on/off as needed
+- Debug mode helps diagnose orchestration issues in real-time
+- Clean production experience when debug mode is off
 
 **What Changed:**
 - Added sidebar with debug mode checkbox (enabled by default)
