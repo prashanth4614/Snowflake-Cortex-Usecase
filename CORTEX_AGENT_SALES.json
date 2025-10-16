@@ -1,0 +1,53 @@
+{
+  "data": {
+    "agent_spec": {
+      "models": {
+        "orchestration": "claude-3-5-sonnet"
+      },
+      "orchestration": {},
+      "instructions": {
+        "response": "- For \"list/show\" requests: Display individual rows as table with ID, amounts, dates\n- For \"count\" requests: Show the count with clear context\n- For \"sum\" requests: Show total with explanation\n- Format tables clearly with column headers\n- Never say \"no data\" after only running a validation query\n- When integrating results from both tools, present them naturally in one coherent response",
+        "orchestration": "TOOL SELECTION:\n- Use Cortex-Sales-Search for: returns, replacements, policies, warranty, contracts, documentation questions\n- Use Cortex Sales Analyst for: sales data, orders, customers, products, inventory, metrics, analytics\n\nQUERY TYPE RULES FOR CORTEX ANALYST:\n- When user says \"list\", \"show\", \"display\" → Generate SELECT with individual rows, include ID columns, LIMIT 20-100\n- When user says \"count\", \"how many\" → Generate COUNT(*)\n- When user says \"sum\", \"total amount\", \"revenue\" → Generate SUM()\n- Default to detail rows unless aggregation is explicitly requested\n- Always include primary key columns (IDs) and dates in SELECT queries\n\nEXAMPLES:\n\"Show me orders\" → SELECT order_id, total_amount, order_date FROM orders LIMIT 20\n\"How many orders\" → SELECT COUNT(*) FROM orders\n\"Total revenue\" → SELECT SUM(total_amount) FROM orders"
+      },
+      "tools": [
+        {
+          "tool_spec": {
+            "type": "cortex_analyst_text_to_sql",
+            "name": "Cortex Sales Analyst",
+            "description": "CAMPAIGNS:\n- Database: CORTEX_AGENTS, Schema: SALES\n- This table stores marketing campaign information including budget allocation and campaign duration. Each campaign has unique identifiers and descriptive names for tracking purposes.\n- The table serves as a master reference for all marketing activities, linking to customer touchpoints and measuring campaign effectiveness across different time periods.\n- LIST OF COLUMNS: CAMPAIGN_ID (unique campaign identifier), CAMPAIGN_NAME (campaign title), END_DATE (campaign completion date), START_DATE (campaign launch date), BUDGET (allocated campaign funds)\n\nCAMPAIGN_TOUCHES:\n- Database: CORTEX_AGENTS, Schema: SALES\n- This table records individual customer interactions within marketing campaigns, tracking specific touchpoints and email variants sent. Each touch represents a single engagement event between a campaign and a customer.\n- The table enables detailed analysis of customer engagement patterns and campaign reach, providing granular data for measuring interaction effectiveness.\n- LIST OF COLUMNS: CAMPAIGN_ID (links to CAMPAIGNS table), CUSTOMER_ID (links to CUSTOMERS table), TOUCH_ID (unique interaction identifier), VARIANT (email type sent), TOUCH_DATE (interaction timestamp)\n\nCUSTOMERS:\n- Database: CORTEX_AGENTS, Schema: SALES\n- This table contains comprehensive customer profile information including contact details and geographic location. It serves as the central customer registry for all business operations.\n- The table supports customer segmentation and regional analysis, enabling targeted marketing and personalized service delivery across different geographic areas.\n- LIST OF COLUMNS: CUSTOMER_ID (unique customer identifier), CUSTOMER_NAME (full customer name), EMAIL (contact email address), PHONE (contact phone number), REGION (geographic location), SIGNUP_DATE (account creation date)\n\nINVENTORY:\n- Database: CORTEX_AGENTS, Schema: SALES\n- This table tracks current stock levels for all products in the system. It provides real-time inventory management capabilities with timestamp tracking for updates.\n- The table is essential for supply chain management and order fulfillment, ensuring accurate stock availability information for sales operations.\n- LIST OF COLUMNS: PRODUCT_ID (links to PRODUCTS table), LAST_UPDATED (inventory update timestamp), STOCK_QUANTITY (current available stock)\n\nORDERS:\n- Database: CORTEX_AGENTS, Schema: SALES\n- This table captures complete order information including customer details, sales channels, and financial totals. Each order represents a complete transaction with status tracking and regional information.\n- The table serves as the primary transaction record, enabling sales analysis across channels, regions, and customer segments with comprehensive discount and total amount tracking.\n- LIST OF COLUMNS: CHANNEL (sales platform), CUSTOMER_ID (links to CUSTOMERS table), ORDER_ID (unique order identifier), ORDER_STATUS (current order state), REGION (order location), ORDER_DATE (transaction date), DISCOUNT_AMOUNT (applied discounts), TOTAL_AMOUNT (final order value)\n\nORDER_ITEMS:\n- Database: CORTEX_AGENTS, Schema: SALES\n- This table stores detailed line-item information for each order, breaking down products, quantities, and pricing at the individual item level. Each record represents one product within an order.\n- The table enables detailed product-level analysis and supports complex pricing calculations including unit-level discounts and quantity-based reporting.\n- LIST OF COLUMNS: ORDER_ID (links to ORDERS table), ORDER_ITEM_ID (unique line item identifier), PRODUCT_ID (links to PRODUCTS table), DISCOUNT (item-level discount rate), QUANTITY (ordered amount), UNIT_PRICE (individual item cost)\n\nPRODUCTS:\n- Database: CORTEX_AGENTS, Schema: SALES\n- This table maintains the complete product catalog with categorization and supplier information. It serves as the master product reference for all sales and inventory operations.\n- The table supports product management and supplier relationship tracking, enabling category-based analysis and vendor performance monitoring.\n- LIST OF COLUMNS: CATEGORY (product classification), PRODUCT_ID (unique product identifier), PRODUCT_NAME (product title), SUPPLIER_ID (vendor identifier)\n\nREFUNDS:\n- Database: CORTEX_AGENTS, Schema: SALES\n- This table tracks all refund transactions processed for customer orders. Each record represents a financial reversal with complete audit trail information.\n- The table supports customer service operations and financial reconciliation, providing visibility into return patterns and refund processing timelines.\n- LIST OF COLUMNS: ORDER_ID (links to ORDERS table), REFUND_ID (unique refund identifier), REFUND_DATE (processing date), REFUND_AMOUNT (returned money value)\n\nSHIPMENTS:\n- Database: CORTEX_AGENTS, Schema: SALES\n- This table manages shipping and delivery information for customer orders, tracking shipment progress from dispatch to delivery. Each record represents one shipment with supplier and timing details.\n- The table enables logistics analysis and delivery performance monitoring, providing insights into shipping delays and supplier fulfillment capabilities.\n- LIST OF COLUMNS: ORDER_ID (links to ORDERS table), SHIPMENT_ID (unique shipment identifier), SUPPLIER_ID (shipping vendor), DELIVERED_DATE (arrival timestamp), SHIPPED_DATE (dispatch timestamp), SHIPPING_DELAY_DAYS (delivery latency metric)\n\nREASONING:\nThis semantic model represents a comprehensive e-commerce and sales management system that tracks the complete customer journey from marketing campaigns through order fulfillment. The model connects marketing activities (campaigns and touches) with customer profiles, product catalogs, order processing, inventory management, shipping logistics, and post-sale services (refunds). The relationships between tables enable end-to-end analysis of sales performance, customer behavior, marketing effectiveness, and operational efficiency across multiple business dimensions including geography, time, products, and channels.\n\nDESCRIPTION:\nThe CORTEX_AGENT_SALES semantic model provides a complete view of e-commerce operations within the CORTEX_AGENTS database SALES schema, encompassing marketing campaigns, customer management, product catalog, order processing, inventory tracking, shipping logistics, and refund processing. The model connects marketing touchpoints through campaigns and customer interactions to actual sales transactions, enabling comprehensive analysis of marketing ROI and customer conversion patterns. Order data flows through detailed line items to inventory management and shipment tracking, providing visibility into the entire fulfillment process from purchase to delivery. The interconnected tables support complex business intelligence queries spanning customer lifetime value, product performance, regional sales analysis, campaign effectiveness, and operational metrics like shipping delays and refund rates. This unified data model enables stakeholders to analyze business performance across marketing, sales, operations, and customer service functions through integrated reporting and analytics."
+          }
+        },
+        {
+          "tool_spec": {
+            "type": "cortex_search",
+            "name": "Cortex-Sales-Search",
+            "description": ""
+          }
+        }
+      ],
+      "tool_resources": {
+        "Cortex Sales Analyst": {
+          "execution_environment": {
+            "type": "warehouse",
+            "warehouse": ""
+          },
+          "semantic_model_file": "@CORTEX_AGENTS.SALES.CORTEX_ANALYST_STAGE/CORTEX_AGENT_SALES.yaml"
+        },
+        "Cortex-Sales-Search": {
+          "id_column": "RELATIVE_PATH",
+          "max_results": 4,
+          "name": "CORTEX_AGENTS.SALES.DOCS",
+          "title_column": "CHUNK"
+        }
+      }
+    },
+    "name": "CORTEX_SALES_AGENT",
+    "database_name": "SNOWFLAKE_INTELLIGENCE",
+    "schema_name": "AGENTS",
+    "owner": "ACCOUNTADMIN",
+    "created_on": "2025-10-13T03:04:36.731+00:00"
+  },
+  "code": null,
+  "message": null,
+  "success": true
+}
